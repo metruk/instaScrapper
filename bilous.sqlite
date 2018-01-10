@@ -1,10 +1,21 @@
-PRAGMA foreign_keys=OFF;
-BEGIN TRANSACTION;
-CREATE TABLE "followers" (
-    "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-    "nickname" TEXT NOT NULL,
-    "isFollowed" INTEGER
+
+
+CREATE TABLE "users" (
+    "id" INTEGER PRIMARY KEY,
+    "username" TEXT NOT NULL,
+    "password" Text
 );
-DELETE FROM sqlite_sequence;
-INSERT INTO "sqlite_sequence" VALUES('followers',3);
-COMMIT;
+CREATE TABLE "followedUsers" (
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+     "user_id" INTEGER NOT NULL,
+    "login" TEXT NOT NULL
+     FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE "allUsers" (
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    "login" TEXT NOT NULL,
+    "followers" Integer,
+    "following" Integer
+);
+

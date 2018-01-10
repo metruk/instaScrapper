@@ -1,0 +1,16 @@
+
+
+CREATE TABLE "users" (
+    "id" INTEGER PRIMARY KEY,
+    "username" TEXT NOT NULL,
+    "password" Text
+);
+CREATE TABLE "followedUsers" (
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+     "user_id" INTEGER NOT NULL,
+    "login" TEXT NOT NULL,
+    "followers" Integer,
+    "following" Integer,
+FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
