@@ -57,6 +57,7 @@ public class Mozilla {
 		driver.manage().window().maximize();
 	    driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
 	    driver.get("https://www.instagram.com/accounts/login/");
+	    //river.get("https://whatismyipaddress.com/");
 	    
 	    WebElement loginField = driver.findElement(By.xpath("//*[@name=\"username\"]"));
 	    loginField.sendKeys(username);
@@ -70,20 +71,18 @@ public class Mozilla {
 		
 		String input = reader.readLine();
 		
-		
-		
 	    //follow block
 		if (input.equals("1")){
 			
 	    	WebElement searchTagButton = driver.findElement(By.xpath("//*[@class=\"_avvq0 _o716c\"]"));
-	    	searchTagButton.sendKeys("#animals"+ "\n");
+	    	searchTagButton.sendKeys("#travel"+ "\n");
 	    	Thread.sleep(1000);
 	    	searchTagButton.sendKeys(Keys.ENTER);
 	    	Thread.sleep(1000);
 	    	searchTagButton.sendKeys(Keys.ENTER);
 	       
 	    	
-	    	for (int i=0;i < 1;i++){
+	    	for (int i=0;i < 40;i++){
 	    		JavascriptExecutor jse = (JavascriptExecutor)driver;
 	    		jse.executeScript("window.scrollBy(0,2000)", "");
 	    		Thread.sleep(3000);
@@ -151,7 +150,7 @@ public class Mozilla {
     				
     				String allUsersQuery = "INSERT INTO allUsers(login,followers,following) VALUES('"+driver.getCurrentUrl()+"','"+followers+"','"+following+"')";
     				mysql.insert(allUsersQuery);
-    	    		Thread.sleep(getRandomNumberInRange(8000,10500));
+    	    		Thread.sleep(getRandomNumberInRange(10500,15500));
     			}catch( org.openqa.selenium.StaleElementReferenceException ex){
     				ex.printStackTrace();
     				System.out.println("Element destroyed, trying again..");
@@ -168,43 +167,133 @@ public class Mozilla {
 	 
 	 //unfollowBlock
 	 }else if(input.equals("2")){
-		 List<String> list = mysql.selectFollowers("1");
-		 
-		 for(int i=0;i<list.size();i++){
-			 driver.get(list.get(i));
-			 WebElement unfollowIcon = null;
-			 do{
-				 try{
-					 
-					 unfollowIcon = driver.findElement(By.xpath("//*[@class=\"_qv64e _t78yp _r9b8f _njrw0\"]"));
-					 manipulator.clickElement(driver, unfollowIcon);
-					 mysql.updateField("0",list.get(i));
-					 System.out.println("AAA "+unfollowIcon);
-					 System.out.println("Login: "+ list.get(i)+" unfollowed");
-					 Thread.sleep(getRandomNumberInRange(1000,1500));
-					 
-				 }catch( org.openqa.selenium.StaleElementReferenceException ex){
-					 unfollowIcon = null;
-					 ex.printStackTrace();
-					 System.out.println("Element destroyed, trying again..");	
-				 
-				 }catch(org.openqa.selenium.NoSuchElementException ex){
-	        			ex.printStackTrace();
-	        			System.out.println("no element!");
-	        			break;
-	        			
-	        	}
-				 
-			 }while(unfollowIcon == null);
+		 driver.get("https://www.instagram.com/"+username);
+		 String sqlId = "SELECT id FROM users WHERE username = '"+username+"';";
+	 	 String id =mysql.select(sqlId,"id");
+	 	 	
+	 	String sqlFollowedUsers = "SELECT login FROM followedusers WHERE user_id ='"+id+"';";
+	 	List<String> users =mysql.selectMultiply(sqlFollowedUsers,"login");
+	 	System.out.println(users);
+		
+	 	double following = 0;
+		 List<WebElement> followersClass=driver.findElements(By.xpath("//*[@class=\"_bnq48\"]"));
+			
+			for(WebElement classElement :followersClass){
+				
+					if(classElement.getText().contains("following")){
+						following = manipulator.getFollowersByClassText(classElement.getText());
+						System.out.println("following "+following);
+					}	
+			}
+			
+			WebElement el = driver.findElement(By.xpath("(//*[@class=\"_t98z6\"])[3]"));
+			manipulator.clickElement(driver, el);
 			 
-		 }
-	 
+			int iterValue = (int) (following / 10);
+			
+			System.out.println(iterValue);
+			
+			Double d = new Double(following);
+			int bb = d.intValue();
+			int countOfUnfollowed=1;
+			for (int k = 0;k<bb;k++){
+				
+				if(k!=0){
+					
+					//String xpathLocaleValue = "(//*[@class=\"_6e4x5\"])["+k+"]";
+					String xpathLocaleValue = "(//*[@class=\"_2g7d5 notranslate _o5iw8\"])["+k+"]";
+					
+					WebElement element = driver.findElement(By.xpath(xpathLocaleValue));
+					String currentLogin = element.getText();
+					System.out.println("current login "+element.getText());
+					boolean isFollowed = false;
+					for(int followedUsers = 0;followedUsers<users.size();followedUsers++){
+						if(currentLogin.equals(users.get(followedUsers))){
+							isFollowed = true;
+						}
+					}
+					if(isFollowed == false){
+						String unFollowXpath = "(//*[@class=\"_ov9ai\"])"+"["+k+"]";
+						WebElement unfollowIcon = driver.findElement(By.xpath(unFollowXpath));
+						manipulator.clickElement(driver, unfollowIcon);
+						
+						Thread.sleep(getRandomNumberInRange(getRandomNumberInRange(1000,2000),getRandomNumberInRange(2500,3000))); 
+						((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", element);
+						Thread.sleep(getRandomNumberInRange(getRandomNumberInRange(12000,13000),getRandomNumberInRange(14000,15000))); 
+						countOfUnfollowed++;
+					}else{
+						Thread.sleep(getRandomNumberInRange(getRandomNumberInRange(1000,2000),getRandomNumberInRange(2500,3000))); 
+						((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", element);
+					}
+				
+			    	if(countOfUnfollowed%15==0){
+			    		System.out.println("sleep");
+			    		Thread.sleep(getRandomNumberInRange(500000, 700000));
+			    		System.out.println("wake");
+			    	}
+			    	
+				}
+				
+			}
+	 //filling	 
 	 }else if(input.equals("3")){
-		 driver.get("https://www.instagram.com/nesquic/following/");
-		 List<WebElement> list=driver.findElements(By.xpath("//*[@class=\"_2g7d5 notranslate _o5iw8\"]"));
-		 ArrayList<String> unfollowAccounts = m.generateFinalList(list);
-		 System.out.println(list);
+		 driver.get("https://www.instagram.com/"+username);		
 		 
+	 	 double following = 0;
+		 List<WebElement> followersClass=driver.findElements(By.xpath("//*[@class=\"_bnq48\"]"));
+			
+			for(WebElement classElement :followersClass){
+				
+				if(classElement.getText().contains("following")){
+					following = manipulator.getFollowersByClassText(classElement.getText());
+					System.out.println("following "+following);
+				}	
+			}
+			
+			int iterValue = (int) (following / 10);
+			
+			System.out.println(iterValue);
+			
+			WebElement el = driver.findElement(By.xpath("(//*[@class=\"_t98z6\"])[3]"));
+			manipulator.clickElement(driver, el);
+			
+			List<String> followingFinalList= new ArrayList<String>();
+			for (int k = 0;k<iterValue;k++){
+				if(k!=0){
+					String xpathValue = "(//*[@class=\"_6e4x5\"])["+k+"0"+"]";
+					System.out.println(xpathValue);
+					WebElement element = driver.findElement(By.xpath(xpathValue));
+			    	System.out.println(element.getText());
+			    	((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", element);
+			    	Thread.sleep(500); 
+			    	
+				}
+				
+			}
+			
+		List<WebElement> list=driver.findElements(By.xpath("//*[@class=\"_2g7d5 notranslate _o5iw8\"]"));
+	 		
+			 for(WebElement e : list){
+					
+			    	String accountLogin = e.getText(); 
+			    	System.out.println("acc "+accountLogin);
+			    	followingFinalList.add(accountLogin);
+	
+			 }
+			System.out.println(followingFinalList);
+			System.out.println(followingFinalList.size());
+			
+			String queryGetId = "SELECT id FROM users WHERE username = '"+username+"';";
+		 	String id =mysql.select(queryGetId,"id");
+		 	System.out.println(id);
+	 		
+	 		
+	 
+	 		for (int i=0;i<followingFinalList.size();i++){
+	 			String insertDefaultUserQuery = "insert into followedusers (user_id, login) values ('"+id+"','"+followingFinalList.get(i)+"');";
+	 			mysql.insert(insertDefaultUserQuery);
+	 		}
+	 }else if(input.equals("4")){
 		 
 	 }
 }

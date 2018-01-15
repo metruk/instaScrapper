@@ -41,8 +41,8 @@ public class MysqlDAO {
         }
     }
     
-    public List<String> selectFollowers(String isFollowed){
-        String sql = "SELECT nickname FROM followers WHERE isFollowed = "+isFollowed;
+    public List<String> selectMultiply( String sql,String returnedValue){
+        
         ArrayList<String> followed = new ArrayList<String>(); 
         try (Connection conn = this.connect();
              Statement stmt  = conn.createStatement();
@@ -50,7 +50,7 @@ public class MysqlDAO {
             
             // loop through the result set
             while (rs.next()) {
-                followed.add(rs.getString("nickname"));        
+                followed.add(rs.getString(returnedValue));        
             }
             
         } catch (SQLException e) {
@@ -97,8 +97,15 @@ public class MysqlDAO {
     	 MysqlDAO mysql = new MysqlDAO();
  		
     	String username = "nesquic";
- 		String sql = "SELECT username FROM users WHERE username = '"+username+"';";
- 		//mysql.select(sql);
+    	//String sql = "SELECT username FROM users WHERE username = '"+username+"';";
+ 		String sql = "SELECT id FROM users WHERE username = '"+username+"';";
+ 		
+ 		String id =mysql.select(sql,"id");
+ 		System.out.println(id);
+ 		
+ 		String sql1 = "SELECT login FROM followedusers WHERE user_id ='"+id+"';";
+ 		List<String> users1 =mysql.selectMultiply(sql1,"login");
+ 		System.out.println(users1);
     }
 
 }
