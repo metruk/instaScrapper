@@ -75,20 +75,20 @@ public class Mozilla {
 		if (input.equals("1")){
 			
 	    	WebElement searchTagButton = driver.findElement(By.xpath("//*[@class=\"_avvq0 _o716c\"]"));
-	    	searchTagButton.sendKeys("#travel"+ "\n");
+	    	searchTagButton.sendKeys("#copenhagen"+ "\n");
 	    	Thread.sleep(1000);
 	    	searchTagButton.sendKeys(Keys.ENTER);
 	    	Thread.sleep(1000);
 	    	searchTagButton.sendKeys(Keys.ENTER);
 	       
 	    	
-	    	for (int i=0;i < 40;i++){
+	    	for (int i=0;i < 80;i++){
 	    		JavascriptExecutor jse = (JavascriptExecutor)driver;
 	    		jse.executeScript("window.scrollBy(0,2000)", "");
 	    		Thread.sleep(3000);
 	    	}    
 	    
-	    	List<WebElement> list=driver.findElements(By.xpath("//*[@class=\"_mck9w _gvoze _f2mse\"]"));
+	    	List<WebElement> list=driver.findElements(By.xpath("//*[@class=\"_mck9w _gvoze _tn0ps\"]"));
 	    
 	    	List<String>finalListofPhotos= m.generateFinalList(list);
 	    	System.out.println(finalListofPhotos);
@@ -144,7 +144,7 @@ public class Mozilla {
     			try{
     				//follow button
     				followIcon = driver.findElement(By.xpath("//*[@class=\"_qv64e _gexxb _r9b8f _njrw0\"]"));
-    				Thread.sleep(getRandomNumberInRange(1000,1300));
+    				Thread.sleep(100);
     				manipulator.clickElement(driver, followIcon);
     				Thread.sleep(getRandomNumberInRange(200,500));
     				
@@ -237,6 +237,7 @@ public class Mozilla {
 			}
 	 //filling	 
 	 }else if(input.equals("3")){
+		 System.out.println("filling db with user's account");
 		 driver.get("https://www.instagram.com/"+username);		
 		 
 	 	 double following = 0;
@@ -286,15 +287,79 @@ public class Mozilla {
 			String queryGetId = "SELECT id FROM users WHERE username = '"+username+"';";
 		 	String id =mysql.select(queryGetId,"id");
 		 	System.out.println(id);
-	 		
-	 		
 	 
 	 		for (int i=0;i<followingFinalList.size();i++){
 	 			String insertDefaultUserQuery = "insert into followedusers (user_id, login) values ('"+id+"','"+followingFinalList.get(i)+"');";
 	 			mysql.insert(insertDefaultUserQuery);
 	 		}
+	 		
 	 }else if(input.equals("4")){
+		 System.out.println("4. follow by account name followers");
+		 System.out.println("Enter account");
 		 
+		    
+			String account = reader.readLine();
+			String accounUrl = "https://www.instagram.com/"+account;
+			driver.get(accounUrl);
+			
+			WebElement el = driver.findElement(By.xpath("(//*[@class=\"_t98z6\"])[2]"));
+			manipulator.clickElement(driver, el);
+			List<String> accountLogins = new ArrayList<>();
+			for(int i=1;i<100;i++){
+				String followXpath = "(//*[@class=\"_2g7d5 notranslate _o5iw8\"])"+"["+i+"]";
+				WebElement followIcon = null;
+				try{
+					followIcon = driver.findElement(By.xpath(followXpath));
+					accountLogins.add(followIcon.getText());
+					((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", followIcon);
+			    	Thread.sleep(250); 
+				}catch(org.openqa.selenium.NoSuchElementException ex){
+					ex.printStackTrace();
+					
+				}
+				
+				Thread.sleep(100);
+			}
+			System.out.println(accountLogins);
+				String url= "https://www.instagram.com/";
+			 	
+				for(int acc = 0; acc<accountLogins.size();acc++){
+					driver.get(url+accountLogins.get(acc));
+					Thread.sleep(1000);
+					String userFollowersXpath = "(//*[@class=\"_bnq48\"])"+"[2]";
+					String userFollowingXpath = "(//*[@class=\"_bnq48\"])"+"[3]";
+					WebElement userFollowers = driver.findElement(By.xpath(userFollowersXpath));
+					WebElement userFollowing = driver.findElement(By.xpath(userFollowingXpath));
+					
+					double following =  manipulator.getFollowersByClassText(userFollowing.getText());
+					double followers =  manipulator.getFollowersByClassText(userFollowers.getText());
+					System.out.println("following"+following);
+					System.out.println("followers"+followers);
+					System.out.println(followers / following );
+					if (followers / following <= 2.1 && followers <= 100000){
+	    				
+						try{
+		    				//follow button
+							WebElement followIcon = driver.findElement(By.xpath("//*[@class=\"_qv64e _gexxb _r9b8f _njrw0\"]"));
+		    				Thread.sleep(100);
+		    				manipulator.clickElement(driver, followIcon);
+		    				Thread.sleep(getRandomNumberInRange(200,500));
+		    				
+		    				String allUsersQuery = "INSERT INTO allUsers(login,followers,following) VALUES('"+driver.getCurrentUrl()+"','"+followers+"','"+following+"')";
+		    				mysql.insert(allUsersQuery);
+		    	    		Thread.sleep(getRandomNumberInRange(10500,15500));
+		    			}catch( org.openqa.selenium.StaleElementReferenceException ex){
+		    				ex.printStackTrace();
+		    				System.out.println("Element destroyed, trying again..");
+		    				
+		    			}catch(org.openqa.selenium.NoSuchElementException ex){
+		        			ex.printStackTrace();
+		        			System.out.println("error break!");
+		        			continue;
+		        		}
+					}
+				}
+				
 	 }
 }
 
